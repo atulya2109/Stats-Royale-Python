@@ -19,7 +19,7 @@ def refresh():
     level=player_info.find('span', class_='supercell').getText()
     player_page=soup.find("div",class_='panel-title')
     player=player_page.find_all('span',class_='supercell')[1]
-    player_obj={'Level':level}
+    player_obj={'Name':player.getText(),'Level':level}
     obj_list.append(player_obj)
     for elem in elems:
         #print (elem)
@@ -36,6 +36,9 @@ def refresh():
     usr_obj={'Player Details':obj_list}
     return json.dumps(usr_obj)
 
+# def runScript(s):
+
+
 if __name__ == '__main__':
-     app.debug=True
-     app.run(host='127.0.0.1',port=5000)
+    app.debug=True
+    app.run(host='127.0.0.1',port=5000)

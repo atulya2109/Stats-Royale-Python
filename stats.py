@@ -11,18 +11,16 @@ def refresh():
     tag=request.args.get("tag")
     obj_list=[]
     url="http://www.statsroyale.com/profile/"+tag
-    print(url)
     req=Request(url,headers={'User-Agent':'Mozilla/5.0(Windows;U;Windows NT 6.1; v2.2) Gecko/20110201'})
     page=urlopen(req).read()
     soup=BeautifulSoup(page,"lxml")
     elems=soup.find_all('div',{'class':'col-sm-4' })
-    print (elems)
-    # player_info=soup.find('div', class_='playerlevel')
-    # level=player_info.find('span', class_='supercell').getText()
-    # player_page=soup.find("div",class_='panel_title')
-    # player=player_page.find_all('span',class_='supercell')[1]
-    # player_obj={'Level':level}
-    # obj_list.append(player_obj)
+    player_info=soup.find('div', class_='playerlevel')
+    level=player_info.find('span', class_='supercell').getText()
+    player_page=soup.find("div",class_='panel-title')
+    player=player_page.find_all('span',class_='supercell')[1]
+    player_obj={'Level':level}
+    obj_list.append(player_obj)
     for elem in elems:
         #print (elem)
         desc=elem.find('div',class_='description')

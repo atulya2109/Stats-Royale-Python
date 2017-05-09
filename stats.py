@@ -17,7 +17,7 @@ def statsRoyale(tag):
 	stats['tournament_cards_won'] = content[4].get_text()
 	stats['total_donations'] = content[5].get_text()
 	stats['best_session_rank'] = content[6].get_text()
-	stats['previuos_session_rank'] = content[7].get_text()
+	stats['previous_session_rank'] = content[7].get_text()
 	stats['legendary_trophies'] = content[8].get_text()
 	stats['wins'] = content[9].get_text()
 	stats['losses'] = content[10].get_text()

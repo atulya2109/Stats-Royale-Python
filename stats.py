@@ -3,7 +3,7 @@ import requests
 
 def statsRoyale(tag):
 	link = 'http://statsroyale.com/profile/' + tag
-	responsef = (requests.get(link)).text
+	response = (requests.get(link)).text
 	soup = BeautifulSoup(response, 'html.parser')
 	stats = {}
 

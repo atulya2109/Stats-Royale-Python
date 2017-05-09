@@ -1,44 +1,28 @@
-from urllib.request import Request,urlopen
 from bs4 import BeautifulSoup
-from flask import Flask
-import json
-from flask import request
+import requests
 
-app=Flask(__name__)
+def statsRoyale(tag):
+	link = 'http://statsroyale.com/profile/' + tag
+	responsef = (requests.get(link)).text
+	soup = BeautifulSoup(response, 'html.parser')
+	stats = {}
 
-@app.route('/refresh/user')
-def refresh():
-    tag=request.args.get("tag")
-    obj_list=[]
-    url="http://www.statsroyale.com/profile/"+tag
-    req=Request(url,headers={'User-Agent':'Mozilla/5.0(Windows;U;Windows NT 6.1; v2.2) Gecko/20110201'})
-    page=urlopen(req).read()
-    soup=BeautifulSoup(page,"lxml")
-    elems=soup.find_all('div',{'class':'col-sm-4' })
-    player_info=soup.find('div', class_='playerlevel')
-    level=player_info.find('span', class_='supercell').getText()
-    player_page=soup.find("div",class_='panel-title')
-    player=player_page.find_all('span',class_='supercell')[1]
-    player_obj={'Name':player.getText(),'Level':level}
-    obj_list.append(player_obj)
-    for elem in elems:
-        #print (elem)
-        desc=elem.find('div',class_='description')
-        cont=elem.find('div',class_='content')
-        if cont is None:
-            continue
-        if desc is None:
-            continue
-        get_desc=elem.find('div',class_='description').getText()
-        get_cont=elem.find('div',class_='content').getText()
-        obj={get_desc:get_cont}
-        obj_list.append(obj)
-    usr_obj={'Player Details':obj_list}
-    return json.dumps(usr_obj)
+	content = soup.find_all('div', {'class':'content'})
+	stats['clan'] = content[0].get_text()
+	if stats['clan'] == 'No Clan':
+		stats['clan'] = None
+	stats['highest_trophies'] = content[1].get_text()
+	stats['last_known_trophies'] = content[2].get_text()
+	stats['challenge_cards_won'] = content[3].get_text()
+	stats['tournament_cards_won'] = content[4].get_text()
+	stats['total_donations'] = content[5].get_text()
+	stats['best_session_rank'] = content[6].get_text()
+	stats['previuos_session_rank'] = content[7].get_text()
+	stats['legendary_trophies'] = content[8].get_text()
+	stats['wins'] = content[9].get_text()
+	stats['losses'] = content[10].get_text()
+	stats['3_crown_wins'] = content[11].get_text()
+	return stats
 
-# def runScript(s):
-
-
-if __name__ == '__main__':
-    app.debug=True
-    app.run(host='127.0.0.1',port=5000)
+stats = statsRoyale(tag='9890JJJV')
+print stats

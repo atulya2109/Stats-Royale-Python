@@ -7,6 +7,7 @@ import requests
 # 9890JJJV
 # PRR2LUGO
 # 9VUQUGCP
+# PL2UV8J
 
 # Return player tag taking input as URL or player tag itself
 def getTag(tag):
@@ -68,6 +69,23 @@ def getBattles(tag, event='all', refresh=False):
 		sleep(8.1)
 	soup = parseURL(soup)
 	return
+# Work in progress
+def getChestCycle(tag, refresh=False):
+	if refresh:
+		refreshProfile(tag)
+		sleep(20.1)
+		chest_cycle={}
+	soup=parseURL(tag)
+	chests_queue=soup.find('div', {'class'='chests_queue'})
+	chests=chests_queue.find_all('div')
+	for chest in chests:
+		if 'disabled' in chest['class']:
+			continue
+		if 'next' in chest['class']:
+			pos=chest['class'].rfind('_')
+			chest_cycle['next_chest']=chest['class'][9:pos-2]
+			continue
+
 
 stats = getProfile(tag='9890JJJV', refresh=False)
 print(stats)

@@ -17,14 +17,14 @@ def statsRoyale(tag, refresh=False):
 		pos = tag.find('/')
 		tag = tag[:pos]
 		tag = tag[::-1]
+		
+	if refresh:
+		refreshProfile(tag)
+		sleep(20.1)
 
 	link = 'http://statsroyale.com/profile/' + tag
 	response = requests.get(link).text
 	soup = BeautifulSoup(response, 'html.parser')
-
-	if refresh:
-		refreshProfile(tag)
-		sleep(20.1)
 
 	stats = {}
 

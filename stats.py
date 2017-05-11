@@ -34,7 +34,7 @@ def getBasic(tag):
 	stats = {}
 
 	level = basic.find('span', {'class':'statistics__userLevel'}).get_text()
-	stats[u'level'] = level
+	stats[u'level'] = int(level)
 
 	username = basic.find('div', {'class':'ui__headerMedium statistics__userName'}).get_text()
 	username = username.replace('\n', '')[:-3].lstrip().rstrip()
@@ -81,52 +81,62 @@ def refreshBattles(tag):
 	link = 'http://statsroyale.com/battles/' + tag + '/refresh'
 	return requests.get(link)
 
-# Work in progress
-def getBattles(tag, event='all', refresh=False):
-	tag = getTag(tag)
-	if refresh:
-		refreshBattles(tag)
-		sleep(8.1)
-	soup = parseURL(tag)
-	# iterate over summary
-	summary = soup.find_all('div', {'class':'replay'})[0]
-	#print match
+def getBattleSide(area, side):
 	battles = {}
+	side = area.find('div', {'class':'replay__player replay__' + side + 'Player'})
 
-	battles[u'event'] = summary['data-type']
+	username = side.find('div', {'class':'replay__userName'}).get_text()
+	battles[u'username'] = username.lstrip().rstrip()
 
-	outcome = summary.find('div', {'class':'replay__win ui__headerExtraSmall'})
-	battles[u'outcome'] = outcome.get_text().lower()
+	clan = side.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
+	battles[u'clan'] = clan.lstrip().rstrip()
 
-	result = summary.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
-	battles[u'result'] = {}
+	trophies = side.find('div', {'class':'replay__trophies'}).get_text()
+	battles[u'trophies'] = trophies.lstrip().rstrip()
 
-	wins = result.split(' ')[0]
-	losses = result.split(' ')[-1]
-	battles[u'result'][u'wins'],  battles[u'result'][u'losses'] = wins, losses
+	battles[u'troops'] = {}
 
-	battles[u'left'] = {}
-	left = summary.find('div', {'class':'replay__player replay__leftPlayer'})
-
-	username = left.find('div', {'class':'replay__userName'}).get_text()
-	battles[u'left'][u'username'] = username.lstrip().rstrip()
-
-	clan = left.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
-	battles[u'left'][u'clan'] = clan.lstrip().rstrip()
-
-	trophies = left.find('div', {'class':'replay__trophies'}).get_text()
-	battles[u'left'][u'trophies'] = trophies.lstrip().rstrip()
-
-	battles[u'left'][u'troops'] = {}
-
-	troops = left.find_all('div', {'class':'replay__card'})
+	troops = side.find_all('div', {'class':'replay__card'})
 	for troop in troops:
 		troop_name = troop.find('img')['src'].replace('/images/cards/full/', '')
 		troop_name = troop_name[:-4]
 
 		level = troop.find('span').get_text()
 		level = int(level.replace('Lvl', ''))
-		battles[u'left'][u'troops'][troop_name] = level
+		battles[u'troops'][troop_name] = level
+
+	return battles
+
+def getBattles(tag, event='all', refresh=False):
+	tag = getTag(tag)
+	if refresh:
+		refreshBattles(tag)
+		sleep(8.1)
+
+	soup = parseURL(tag)
+
+	environment = soup.find_all('div', {'class':'replay'})
+	battles = []
+
+	for area in environment:
+		battle = {}
+		battle[u'event'] = area['data-type']
+
+		outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
+		battle[u'outcome'] = outcome.get_text().lower()
+
+		result = area.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
+		battle[u'result'] = {}
+
+		wins = result.split(' ')[0]
+		losses = result.split(' ')[-1]
+		battle[u'result'][u'wins'],  battle[u'result'][u'losses'] = wins, losses
+
+		battle[u'left'] = getBattleSide(area, side='left')
+		battle[u'right'] = getBattleSide(area, side='right')
+
+		battles.append(battle)
+		print(battles)
 
 	return battles
 

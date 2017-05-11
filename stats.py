@@ -32,16 +32,20 @@ def getBasic(tag):
 	soup = parseURL(tag)
 	basic = soup.find('div', {'class':'statistics__userInfo'})
 	stats = {}
+
 	level = basic.find('span', {'class':'statistics__userLevel'}).get_text()
 	stats[u'level'] = level
+
 	username = basic.find('div', {'class':'ui__headerMedium statistics__userName'}).get_text()
 	username = username.replace('\n', '')[:-3].lstrip().rstrip()
 	stats[u'username'] = username
+
 	clan = basic.get_text().replace(level, '').replace(username, '').lstrip().rstrip()
 	if clan == 'No Clan':
 		stats[u'clan'] = None
 	else:
 		stats[u'clan'] = clan
+
 	return stats
 
 # Refresh player profile
@@ -56,11 +60,17 @@ def getProfile(tag, refresh=False):
 		refreshProfile(tag)
 		sleep(20.1)
 	stats = getBasic(tag)
-	stats[u'profile'] = {}
 	soup = parseURL(tag)
+
+	stats[u'profile'] = {}
 	profile = soup.find('div', {'class':'statistics__metrics'})
+
 	for div in profile.find_all('div', {'class':'statistics__metric'}):
 		result = (div.find_all('div')[0].get_text().replace('\n', '')).lstrip().rstrip()
+		try:
+			result = int(result)
+		except ValueError:
+			pass
 		item = div.find_all('div')[1].get_text().replace(' ', '_').lower()
 		stats[u'profile'][item] = result
 	return stats
@@ -78,16 +88,46 @@ def getBattles(tag, event='all', refresh=False):
 		refreshBattles(tag)
 		sleep(8.1)
 	soup = parseURL(tag)
-	match = soup.find_all('div', {'class':'replay__player replay__leftPlayer'})[0]
+	# iterate over summary
+	summary = soup.find_all('div', {'class':'replay'})[0]
+	#print match
 	battles = {}
-	battles[u'event'] = match.find('div', {'data-type':'challenge'})
-	battles[u'outcome'] = match.find('div', {'class':'replay__win ui__headerExtraSmall'}).get_text()
-	result = match.find('div', {'class':'replay__recordText ui__headerExtraSmall'})
-	wins = results.split(' ')[0]
-	losses = results.split(' ')[-1]
+
+	battles[u'event'] = summary['data-type']
+
+	outcome = summary.find('div', {'class':'replay__win ui__headerExtraSmall'})
+	battles[u'outcome'] = outcome.get_text().lower()
+
+	result = summary.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
 	battles[u'result'] = {}
+
+	wins = result.split(' ')[0]
+	losses = result.split(' ')[-1]
 	battles[u'result'][u'wins'],  battles[u'result'][u'losses'] = wins, losses
-	battles[u'left'] = match.find()
+
+	battles[u'left'] = {}
+	left = summary.find('div', {'class':'replay__player replay__leftPlayer'})
+
+	username = left.find('div', {'class':'replay__userName'}).get_text()
+	battles[u'left'][u'username'] = username.lstrip().rstrip()
+
+	clan = left.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
+	battles[u'left'][u'clan'] = clan.lstrip().rstrip()
+
+	trophies = left.find('div', {'class':'replay__trophies'}).get_text()
+	battles[u'left'][u'trophies'] = trophies.lstrip().rstrip()
+
+	battles[u'left'][u'troops'] = {}
+
+	troops = left.find_all('div', {'class':'replay__card'})
+	for troop in troops:
+		troop_name = troop.find('img')['src'].replace('/images/cards/full/', '')
+		troop_name = troop_name[:-4]
+
+		level = troop.find('span').get_text()
+		level = int(level.replace('Lvl', ''))
+		battles[u'left'][u'troops'][troop_name] = level
+
 	return battles
 
 # Work in progress
@@ -110,5 +150,5 @@ def getChestCycle(tag, refresh=False):
 stats = getProfile(tag='9890JJJV', refresh=False)
 print(stats)
 
-#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-#print(battles)
+battles = getBattles(tag='9890JJJV', event='all', refresh=False)
+print(battles)

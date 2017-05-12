@@ -81,6 +81,7 @@ def refreshBattles(tag):
 	link = 'http://statsroyale.com/battles/' + tag + '/refresh'
 	return requests.get(link)
 
+# Get battles stats for both winner and loser
 def getBattleSide(area, side):
 	battles = {}
 	side = area.find('div', {'class':'replay__player replay__' + side + 'Player'})
@@ -107,6 +108,7 @@ def getBattleSide(area, side):
 
 	return battles
 
+# Get battle summary
 def getBattles(tag, event='all', refresh=False):
 	tag = getTag(tag)
 	if refresh:
@@ -119,24 +121,27 @@ def getBattles(tag, event='all', refresh=False):
 	battles = []
 
 	for area in environment:
-		battle = {}
-		battle[u'event'] = area['data-type']
+		try:
+			battle = {}
+			battle[u'event'] = area['data-type']
 
-		outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
-		battle[u'outcome'] = outcome.get_text().lower()
+			outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
+			battle[u'outcome'] = outcome.get_text().lower()
 
-		result = area.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
-		battle[u'result'] = {}
+			result = area.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
+			battle[u'result'] = {}
 
-		wins = result.split(' ')[0]
-		losses = result.split(' ')[-1]
-		battle[u'result'][u'wins'],  battle[u'result'][u'losses'] = wins, losses
+			wins = int(result.split(' ')[0])
+			losses = int(result.split(' ')[-1])
+			battle[u'result'][u'wins'], battle[u'result'][u'losses'] = wins, losses
 
-		battle[u'left'] = getBattleSide(area, side='left')
-		battle[u'right'] = getBattleSide(area, side='right')
+			battle[u'left'] = getBattleSide(area, side='left')
+			battle[u'right'] = getBattleSide(area, side='right')
 
-		battles.append(battle)
-		print(battles)
+			battles.append(battle)
+
+		except:
+			pass
 
 	return battles
 
@@ -157,8 +162,11 @@ def getChestCycle(tag, refresh=False):
 			chest_cycle['next_chest'] = chest['class'][9:pos-2]
 			continue
 
-stats = getProfile(tag='9890JJJV', refresh=False)
-print(stats)
+#stats = getProfile(tag='9890JJJV', refresh=False)
+#print(stats)
 
-battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-print(battles)
+#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
+#print(battles)
+#print(battles[0])
+#print(battles[0]['result']['wins'])
+#print(battles[0]['left']['troops']['skeleton_horde'])

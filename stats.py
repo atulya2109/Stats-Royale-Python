@@ -9,6 +9,7 @@ import requests
 
 '''Clan tags for testing'''
 # 2CQQVQCU, QYLPC9C, G9CL0QJ
+# statsroyale.com/clan/2CQQVQCU
 
 # Return player tag taking input as URL or player tag itself
 def getTag(tag):
@@ -20,16 +21,32 @@ def getTag(tag):
 	return tag
 
 # Return parsed profile page using BS4
-def parseURL(tag):
+def parseURL(tag, element):
 	tag = getTag(tag)
-	link = 'http://statsroyale.com/profile/' + tag
+	if element == 'profile':
+		link = 'http://statsroyale.com/profile/' + tag
+	elif element == 'battles':
+		link = 'http://statsroyale.com/profile/' + tag
+	elif element == 'clan':
+		link = 'http://statsroyale.com/clan/' + tag
 	response = requests.get(link).text
 	soup = BeautifulSoup(response, 'html.parser')
 	return soup
 
+# Refresh player battles
+def refresh(tag, element):
+	tag = getTag(tag)
+	if element == 'profile':
+		link = 'http://statsroyale.com/profile/' + tag + '/refresh'
+	elif element == 'battles':
+		link = 'http://statsroyale.com/battles/' + tag + '/refresh'
+	elif element == 'clan':
+		link = 'http://statsroyale.com/clan/' + tag + '/refresh'
+	return requests.get(link)
+
 # Return player's username and level
-def getBasic(tag):
-	soup = parseURL(tag)
+def getProfileBasic(tag):
+	soup = parseURL(tag, element='profile')
 	basic = soup.find('div', {'class':'statistics__userInfo'})
 	stats = {}
 
@@ -48,19 +65,14 @@ def getBasic(tag):
 
 	return stats
 
-# Refresh player profile
-def refreshProfile(tag):
-	tag = getTag(tag)
-	link = 'http://statsroyale.com/profile/' + tag + '/refresh'
-	return requests.get(link)
 
 # Return highest_trophies, donations, etc
 def getProfile(tag, refresh=False):
 	if refresh:
-		refreshProfile(tag)
+		refresh(tag, element='profile')
 		sleep(20.1)
-	stats = getBasic(tag)
-	soup = parseURL(tag)
+	stats = getProfileBasic(tag)
+	soup = parseURL(tag, element='profile')
 
 	stats[u'profile'] = {}
 	profile = soup.find('div', {'class':'statistics__metrics'})
@@ -74,12 +86,6 @@ def getProfile(tag, refresh=False):
 		item = div.find_all('div')[1].get_text().replace(' ', '_').lower()
 		stats[u'profile'][item] = result
 	return stats
-
-# Refresh player battles
-def refreshBattles(tag):
-	tag = getTag(tag)
-	link = 'http://statsroyale.com/battles/' + tag + '/refresh'
-	return requests.get(link)
 
 # Get battles stats for both winner and loser
 def getBattleSide(area, side):
@@ -117,10 +123,10 @@ def getBattleSide(area, side):
 def getBattles(tag, event='all', refresh=False):
 	tag = getTag(tag)
 	if refresh:
-		refreshBattles(tag)
+		refresh(tag, element='battles')
 		sleep(8.1)
 
-	soup = parseURL(tag)
+	soup = parseURL(tag, element='battles')
 
 	environment = soup.find_all('div', {'class':'replay'})
 	battles = []
@@ -150,13 +156,43 @@ def getBattles(tag, event='all', refresh=False):
 
 	return battles
 
+def getClanBasic(tag):
+	soup = parseURL(tag, element='clan')
+	clan = {}
+
+	title = soup.find('div', {'class':'ui__headerMedium clan__clanName'}).get_text()
+	clan[u'name'] = title.lstrip().rstrip()
+
+	description = soup.find('div', {'class':'ui__mediumText'}).get_text()
+	clan[u'description'] = description.lstrip().rstrip()
+
+	clan_stats = soup.find_all('div', {'class':'clan__metricContent'})
+
+	for div in clan_stats:
+		item = div.find('div', {'class':'ui__mediumText'}).get_text()
+		item = item.replace('/', '_').replace(' ', '_').lower()
+		result = div.find('div', {'class':'ui__headerMedium'}).get_text()
+		result = int(result)
+		clan[item] = result
+
+	return clan
+
+# Work in progress
+def getClan(tag, refresh=False):
+	tag = getTag(tag)
+	soup = parseURL(tag, element='clan')
+	if refresh:
+		refresh(tag, element='clan')
+	clan = getClanBasic(tag)
+	return clan
+
 # Work in progress
 def getChestCycle(tag, refresh=False):
 	if refresh:
-		refreshProfile(tag)
+		refresh(tag, element='profile')
 		sleep(20.1)
 		chest_cycle = {}
-	soup = parseURL(tag)
+	soup = parseURL(tag, element='profile')
 	chests_queue = soup.find('div', {'class':'chests_queue'})
 	chests = chests_queue.find_all('div')
 	for chest in chests:
@@ -170,10 +206,13 @@ def getChestCycle(tag, refresh=False):
 #stats = getProfile(tag='9890JJJV', refresh=False)
 #print(stats)
 
-battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-for x in battles:
-	print x
+#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
+#for x in battles:
+#	print(x)
 
 #print(battles[0])
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])
+
+clan = getClan(tag='2CQQVQCU', refresh=False)
+print(clan)

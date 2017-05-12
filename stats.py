@@ -90,10 +90,15 @@ def getBattleSide(area, side):
 	battles[u'username'] = username.lstrip().rstrip()
 
 	clan = side.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
-	battles[u'clan'] = clan.lstrip().rstrip()
+	clan = clan.lstrip().rstrip()
+
+	if clan == 'No Clan':
+		battles[u'clan'] = None
+	else:
+		battles[u'clan'] = clan
 
 	trophies = side.find('div', {'class':'replay__trophies'}).get_text()
-	battles[u'trophies'] = trophies.lstrip().rstrip()
+	battles[u'trophies'] = int(trophies.lstrip().rstrip())
 
 	battles[u'troops'] = {}
 

@@ -191,17 +191,22 @@ def getChestCycle(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
 		sleep(20.1)
-		chest_cycle = {}
+	chest_cycle={}
 	soup = parseURL(tag, element='profile')
-	chests_queue = soup.find('div', {'class':'chests_queue'})
+	chests_queue = soup.find('div', {'class':'chests__queue'})
 	chests = chests_queue.find_all('div')
 	for chest in chests:
-		if 'disabled' in chest['class']:
+		if 'chests__disabled' in chest['class'][-1]:
+			continue # Disabled chests are those chest that player has already got.
+		elif 'chests__next' in chest['class'][-1]:
+			chest_cycle[u'next_chest'] = chest['class'][0][8:] # class=chests__silver chests__next
 			continue
-		if 'next' in chest['class']:
-			pos = chest['class'].rfind('_')
-			chest_cycle['next_chest'] = chest['class'][9:pos-2]
-			continue
+		elif 'chests__' in chest['class'][-1]:
+			print (chest)
+			chest_name = chest['class'][9:]
+			counter=chest.find('span', {'class':'chests__counter'}).get_text()
+			chest_cycle[u'counter'] = chest_name
+	return chest_cycle
 
 #stats = getProfile(tag='9890JJJV', refresh=False)
 #print(stats)
@@ -214,5 +219,6 @@ def getChestCycle(tag, refresh=False):
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])
 
-clan = getClan(tag='2CQQVQCU', refresh=False)
-print(clan)
+#clan = getClan(tag='2CQQVQCU', refresh=False)
+#print(clan)
+print(getChestCycle(tag='PL2UV8j', refresh=False))

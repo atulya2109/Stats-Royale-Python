@@ -121,27 +121,27 @@ def getBattles(tag, event='all', refresh=False):
 	battles = []
 
 	for area in environment:
-		try:
-			battle = {}
-			battle[u'event'] = area['data-type']
+		battle = {}
+		battle[u'event'] = area['data-type']
 
-			outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
-			battle[u'outcome'] = outcome.get_text().lower()
+		outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
 
-			result = area.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
-			battle[u'result'] = {}
+		if outcome == None:
+			battle[u'outcome'] = 'defeat'
+		else:
+			battle[u'outcome'] = 'victory'
 
-			wins = int(result.split(' ')[0])
-			losses = int(result.split(' ')[-1])
-			battle[u'result'][u'wins'], battle[u'result'][u'losses'] = wins, losses
+		result = area.find('div', {'class':'replay__recordText ui__headerExtraSmall'}).get_text()
+		battle[u'result'] = {}
 
-			battle[u'left'] = getBattleSide(area, side='left')
-			battle[u'right'] = getBattleSide(area, side='right')
+		wins = int(result.split(' ')[0])
+		losses = int(result.split(' ')[-1])
+		battle[u'result'][u'wins'], battle[u'result'][u'losses'] = wins, losses
 
-			battles.append(battle)
+		battle[u'left'] = getBattleSide(area, side='left')
+		battle[u'right'] = getBattleSide(area, side='right')
 
-		except:
-			pass
+		battles.append(battle)
 
 	return battles
 
@@ -165,8 +165,10 @@ def getChestCycle(tag, refresh=False):
 #stats = getProfile(tag='9890JJJV', refresh=False)
 #print(stats)
 
-#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-#print(battles)
+battles = getBattles(tag='9890JJJV', event='all', refresh=False)
+for x in battles:
+	print x
+
 #print(battles[0])
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])

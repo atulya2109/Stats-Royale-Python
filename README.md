@@ -8,8 +8,8 @@ Retrieve player info from http://statsroyale.com/ in a JSON format.
 
 -
 ## Communication:
- We'll be using "Slack" app available on app store and play store to communicate.Join the team using this email
- stats-royale-python.slack.com
+ We'll be using "Slack" app available on app store and play store to communicate.Join the team using this team url
+ http://stats-royale-python.slack.com
 
 ## License:
 

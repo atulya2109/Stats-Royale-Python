@@ -186,12 +186,13 @@ def getClan(tag, refresh=False):
 	clan = getClanBasic(tag)
 	return clan
 
-# Work in progress
+# Returns a list with each chest as a dictionary which contains chest name an counter.
 def getChestCycle(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
 		sleep(20.1)
 	chest_cycle={}
+	chest_list=[]
 	soup = parseURL(tag, element='profile')
 	chests_queue = soup.find('div', {'class':'chests__queue'})
 	chests = chests_queue.find_all('div')
@@ -199,14 +200,14 @@ def getChestCycle(tag, refresh=False):
 		if 'chests__disabled' in chest['class'][-1]:
 			continue # Disabled chests are those chest that player has already got.
 		elif 'chests__next' in chest['class'][-1]:
-			chest_cycle[u'next_chest'] = chest['class'][0][8:] # class=chests__silver chests__next
+			chest_list.append({'next_chest':chest['class'][0][8:]}) # class=chests__silver chests__next
 			continue
-		elif 'chests__' in chest['class'][-1]:
-			print (chest)
-			chest_name = chest['class'][9:]
+		elif 'chests__' in chest['class'][0]:
+			print (chest['class'][0])
+			chest_name = chest['class'][0][8:]
 			counter=chest.find('span', {'class':'chests__counter'}).get_text()
-			chest_cycle[u'counter'] = chest_name
-	return chest_cycle
+			chest_list.append({'chest':chest_name, 'counter':counter})
+	return chest_list
 
 #stats = getProfile(tag='9890JJJV', refresh=False)
 #print(stats)

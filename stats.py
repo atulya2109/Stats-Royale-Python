@@ -8,7 +8,7 @@ import requests
 # 8QU0PCQ
 
 '''Clan tags for testing'''
-# 2CQQVQCU, QYLPC9C, G9CL0QJ
+# QQPPJRL, 2CQQVQCU, QYLPC9C, G9CL0QJ
 # statsroyale.com/clan/2CQQVQCU
 
 # Return player tag taking input as URL or player tag itself
@@ -186,30 +186,58 @@ def getClan(tag, refresh=False):
 	clan = getClanBasic(tag)
 	return clan
 
-# Returns a list with each chest as a dictionary which contains chest name an counter.
+# Returns a list with each chest as a dictionary which contains chest name an counter
 def getChestCycle(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
 		sleep(20.1)
+
 	chest_cycle={}
 	chest_list=[]
 	soup = parseURL(tag, element='profile')
 	chests_queue = soup.find('div', {'class':'chests__queue'})
 	chests = chests_queue.find_all('div')
+
 	for chest in chests:
 		if 'chests__disabled' in chest['class'][-1]:
 			continue # Disabled chests are those chest that player has already got.
+
 		elif 'chests__next' in chest['class'][-1]:
 			chest_list.append({'next_chest':chest['class'][0][8:]}) # class=chests__silver chests__next
 			continue
+
 		elif 'chests__' in chest['class'][0]:
 			print (chest['class'][0])
 			chest_name = chest['class'][0][8:]
 			counter=chest.find('span', {'class':'chests__counter'}).get_text()
 			chest_list.append({'chest':chest_name, 'counter':counter})
+
 	return chest_list
 
-#stats = getProfile(tag='9890JJJV', refresh=False)
+ # Work In Progress
+def getClanMembers(tag, refresh=False):
+	if refresh:
+		refresh(tag, element='profile')
+		sleep(20.1)
+
+	soup = parseURL(tag, element='clan')
+	members=[]
+	rowContainers = soup.find_all('div', {'class':'clan__rowContainer'})
+
+	for rowContainer in rowContainers:
+		member = {}
+		info = rowContainer.find_all('div',{'class':'clan__row'})
+		member[u'rank'] = info[0].get_text().strip()
+		member[u'name'] = rowContainer.find('a', {'class':'ui__blueLink'}).get_text()
+		member[u'tag'] = rowContainer.find('a', {'class':'ui__blueLink'})['href'][9:]
+		member[u'level'] = rowContainer.find('span', {'class':'clan__playerLevel'}).get_text()
+		member[u'trophies'] = rowContainer.find('div', {'class':'clan__cup'}).get_text()
+		member[u'donations'] = rowContainer.find_all('div', {'class':"clan__row"})[5].get_text()
+		member[u'role'] = rowContainer.find_all('div', {'class':"clan__row"})[6].get_text().strip()
+		members.append(member)
+
+	return members
+#stats= getProfile(tag='9890JJJV', refresh=False)
 #print(stats)
 
 #battles = getBattles(tag='9890JJJV', event='all', refresh=False)
@@ -220,6 +248,7 @@ def getChestCycle(tag, refresh=False):
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])
 
-#clan = getClan(tag='2CQQVQCU', refresh=False)
-#print(clan)
-print(getChestCycle(tag='PL2UV8j', refresh=False))
+# clan = getClan(tag='2CQQVQCU', refresh=False)
+# print(clan)
+#print(getChestCycle(tag='PL2UV8j', refresh=False))
+getClanMembers('QQPPJRL')

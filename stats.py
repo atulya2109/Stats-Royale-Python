@@ -251,4 +251,4 @@ def getClanMembers(tag, refresh=False):
 # clan = getClan(tag='2CQQVQCU', refresh=False)
 # print(clan)
 #print(getChestCycle(tag='PL2UV8j', refresh=False))
-getClanMembers('QQPPJRL')
+print(getClanMembers('QQPPJRL'))

@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from json import loads
+from flask import Flask
 from time import sleep
 import requests
 
@@ -250,5 +251,4 @@ def getClanMembers(tag, refresh=False):
 
 # clan = getClan(tag='2CQQVQCU', refresh=False)
 # print(clan)
-#print(getChestCycle(tag='PL2UV8j', refresh=False))
-print(getClanMembers('QQPPJRL'))
+print(getChestCycle(tag='PL2UV8J', refresh=True))

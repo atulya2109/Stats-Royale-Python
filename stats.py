@@ -4,6 +4,8 @@ from flask import Flask
 from time import sleep
 import requests
 
+app = Flask(__name__)
+
 '''Profile tags for testing '''
 # 9890JJJV, PRR2LUGO, 9VUQUGCP, PL2UV8J
 # 8QU0PCQ
@@ -35,6 +37,7 @@ def parseURL(tag, element):
 	return soup
 
 # Refresh player battles
+@app.route('/refresh/')
 def refresh(tag, element):
 	tag = getTag(tag)
 	if element == 'profile':
@@ -46,23 +49,30 @@ def refresh(tag, element):
 	return requests.get(link)
 
 # Return player's username and level
+
 def getProfileBasic(tag):
 	soup = parseURL(tag, element='profile')
-	basic = soup.find('div', {'class':'statistics__userInfo'})
+	# basic = soup.find('div', {'class':'statistics__userInfo'}
 	stats = {}
 
-	level = basic.find('span', {'class':'statistics__userLevel'}).get_text()
+	level = soup.find('span', {'class':'profileHeader__userLevel'}).get_text()
 	stats[u'level'] = int(level)
 
-	username = basic.find('div', {'class':'ui__headerMedium statistics__userName'}).get_text()
+	username = soup.find('div', {'class':'ui__headerMedium profileHeader__name'}).get_text()
 	username = username.strip('\n')[:-3].strip()
 	stats[u'username'] = username
 
-	clan = basic.get_text().replace(level, '').replace(username, '').strip()
+	# clan = soup.find('profileHeader__userClan').get_text().replace(level, '').replace(username, '').strip()
+	clan = soup.find('a',{'class':'profileHeader__userClan'})
+	clan_name = clan.get_text().strip()
+
 	if clan == 'No Clan':
 		stats[u'clan'] = None
+		stats[u'clan tag'] = '#'
 	else:
-		stats[u'clan'] = clan
+		stats[u'clan'] = clan_name
+		clan_tag = '#' + clan['href'][6:].strip()
+		stats[u'clan tag'] = clan_tag
 
 	return stats
 
@@ -208,7 +218,6 @@ def getChestCycle(tag, refresh=False):
 			continue
 
 		elif 'chests__' in chest['class'][0]:
-			print (chest['class'][0])
 			chest_name = chest['class'][0][8:]
 			counter=chest.find('span', {'class':'chests__counter'}).get_text()
 			chest_list.append({'chest':chest_name, 'counter':counter})
@@ -239,16 +248,16 @@ def getClanMembers(tag, refresh=False):
 		members.append(member)
 
 	return members
-stats= getProfile(tag='PLCGCYUL', refresh=False)
-print(stats)
 
-#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-#for x in battles:
-#	print(x)
-
-#print(battles[0])
-#print(battles[0]['result']['wins'])
-#print(battles[0]['left']['troops']['skeleton_horde'])
-# clan = getClan(tag='2CQQVQCU', refresh=False)
-# print(clan)
-print(getChestCycle(tag='PL2UV8J', refresh=True))
+'''Methods That Are Working...'''
+# getChestCycle("PL2UV8J")
+# getProfileBasic("PL2UV8J")
+# getClanBasic("QQPPJRL")
+'''Methods Throwing Error...''' # If You Fixed Anyone Of These Please Mention Your Name
+# getBattleSide()
+# getBattles()
+'''Fixed !!!'''
+# getProfileBasic("PL2UV8J") by Atulya2109
+'''Uncomment to run in browser'''
+# if __name__ == '__main__':
+#     app.run(host = '127.0.0.1', port = 5000)

@@ -55,10 +55,10 @@ def getProfileBasic(tag):
 	stats[u'level'] = int(level)
 
 	username = basic.find('div', {'class':'ui__headerMedium statistics__userName'}).get_text()
-	username = username.replace('\n', '')[:-3].lstrip().rstrip()
+	username = username.strip('\n')[:-3].strip()
 	stats[u'username'] = username
 
-	clan = basic.get_text().replace(level, '').replace(username, '').lstrip().rstrip()
+	clan = basic.get_text().replace(level, '').replace(username, '').strip()
 	if clan == 'No Clan':
 		stats[u'clan'] = None
 	else:
@@ -79,12 +79,12 @@ def getProfile(tag, refresh=False):
 	profile = soup.find('div', {'class':'statistics__metrics'})
 
 	for div in profile.find_all('div', {'class':'statistics__metric'}):
-		result = (div.find_all('div')[0].get_text().replace('\n', '')).lstrip().rstrip()
+		result = (div.find_all('div')[0].get_text().strip('\n')).strip()
 		try:
 			result = int(result)
 		except ValueError:
 			pass
-		item = div.find_all('div')[1].get_text().replace(' ', '_').lower()
+		item = div.find_all('div')[1].get_text().strip('_').lower()
 		stats[u'profile'][item] = result
 	return stats
 
@@ -94,10 +94,10 @@ def getBattleSide(area, side):
 	side = area.find('div', {'class':'replay__player replay__' + side + 'Player'})
 
 	username = side.find('div', {'class':'replay__userName'}).get_text()
-	battles[u'username'] = username.lstrip().rstrip()
+	battles[u'username'] = username.strip()
 
 	clan = side.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
-	clan = clan.lstrip().rstrip()
+	clan = clan.strip()
 
 	if clan == 'No Clan':
 		battles[u'clan'] = None
@@ -105,7 +105,7 @@ def getBattleSide(area, side):
 		battles[u'clan'] = clan
 
 	trophies = side.find('div', {'class':'replay__trophies'}).get_text()
-	battles[u'trophies'] = int(trophies.lstrip().rstrip())
+	battles[u'trophies'] = int(trophies.strip())
 
 	battles[u'troops'] = {}
 
@@ -162,10 +162,10 @@ def getClanBasic(tag):
 	clan = {}
 
 	title = soup.find('div', {'class':'ui__headerMedium clan__clanName'}).get_text()
-	clan[u'name'] = title.lstrip().rstrip()
+	clan[u'name'] = title.strip()
 
 	description = soup.find('div', {'class':'ui__mediumText'}).get_text()
-	clan[u'description'] = description.lstrip().rstrip()
+	clan[u'description'] = description.strip()
 
 	clan_stats = soup.find_all('div', {'class':'clan__metricContent'})
 
@@ -228,18 +228,19 @@ def getClanMembers(tag, refresh=False):
 	for rowContainer in rowContainers:
 		member = {}
 		info = rowContainer.find_all('div',{'class':'clan__row'})
-		member[u'rank'] = info[0].get_text().strip()
-		member[u'name'] = rowContainer.find('a', {'class':'ui__blueLink'}).get_text()
+		member[u'rank'] = int(info[0].get_text().strip().strip('#'))
+		username = rowContainer.find('a', {'class':'ui__blueLink'}).get_text().split(' ')
+		member[u'username'] = ''.join(username)
 		member[u'tag'] = rowContainer.find('a', {'class':'ui__blueLink'})['href'][9:]
 		member[u'level'] = rowContainer.find('span', {'class':'clan__playerLevel'}).get_text()
-		member[u'trophies'] = rowContainer.find('div', {'class':'clan__cup'}).get_text()
-		member[u'donations'] = rowContainer.find_all('div', {'class':"clan__row"})[5].get_text()
+		member[u'trophies'] = int(rowContainer.find('div', {'class':'clan__cup'}).get_text())
+		member[u'donations'] = int(rowContainer.find_all('div', {'class':"clan__row"})[5].get_text())
 		member[u'role'] = rowContainer.find_all('div', {'class':"clan__row"})[6].get_text().strip()
 		members.append(member)
 
 	return members
-#stats= getProfile(tag='9890JJJV', refresh=False)
-#print(stats)
+stats= getProfile(tag='PLCGCYUL', refresh=False)
+print(stats)
 
 #battles = getBattles(tag='9890JJJV', event='all', refresh=False)
 #for x in battles:
@@ -248,7 +249,6 @@ def getClanMembers(tag, refresh=False):
 #print(battles[0])
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])
-
 # clan = getClan(tag='2CQQVQCU', refresh=False)
 # print(clan)
 print(getChestCycle(tag='PL2UV8J', refresh=True))

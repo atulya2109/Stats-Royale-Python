@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from json import loads
-from flask import Flask
+from flask import Flask, request
 from time import sleep
 import requests
 
@@ -29,7 +29,7 @@ def parseURL(tag, element):
 	if element == 'profile':
 		link = 'http://statsroyale.com/profile/' + tag
 	elif element == 'battles':
-		link = 'http://statsroyale.com/profile/' + tag
+		link = 'http://statsroyale.com/matches/' + tag
 	elif element == 'clan':
 		link = 'http://statsroyale.com/clan/' + tag
 	response = requests.get(link).text
@@ -48,7 +48,7 @@ def refresh(tag, element):
 		link = 'http://statsroyale.com/clan/' + tag + '/refresh'
 	return requests.get(link)
 
-# Return player's username and level
+# Return player's username, level, clan, clan tag.
 
 def getProfileBasic(tag):
 	soup = parseURL(tag, element='profile')
@@ -77,7 +77,8 @@ def getProfileBasic(tag):
 	return stats
 
 
-# Return highest_trophies, donations, etc
+# Return highest_trophies, donations, etc.
+@app.route('/profile?tag')
 def getProfile(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
@@ -114,8 +115,13 @@ def getBattleSide(area, side):
 	else:
 		battles[u'clan'] = clan
 
-	trophies = side.find('div', {'class':'replay__trophies'}).get_text()
-	battles[u'trophies'] = int(trophies.strip())
+	try:
+		trophies = side.find('div', {'class':'replay__trophies'}).get_text().strip()
+		battles[u'trophies'] = trophies
+
+	except Exception as e:
+		battles[u'trophies'] = 'Not Available'
+
 
 	battles[u'troops'] = {}
 
@@ -139,7 +145,7 @@ def getBattles(tag, event='all', refresh=False):
 
 	soup = parseURL(tag, element='battles')
 
-	environment = soup.find_all('div', {'class':'replay'})
+	environment = soup.find_all('div', {'class':'replay__container'})
 	battles = []
 
 	for area in environment:
@@ -249,15 +255,18 @@ def getClanMembers(tag, refresh=False):
 
 	return members
 
+print(getBattles("PL2UV8J"))
+
 '''Methods That Are Working...'''
 # getChestCycle("PL2UV8J")
 # getProfileBasic("PL2UV8J")
 # getClanBasic("QQPPJRL")
 '''Methods Throwing Error...''' # If You Fixed Anyone Of These Please Mention Your Name
-# getBattleSide()
-# getBattles()
+
 '''Fixed !!!'''
-# getProfileBasic("PL2UV8J") by Atulya2109
+# getProfileBasic() by Atulya2109
+# getBattleSide() by Atulya2109
+# getBattles() by Atulya2109
 '''Uncomment to run in browser'''
 # if __name__ == '__main__':
 #     app.run(host = '127.0.0.1', port = 5000)

@@ -10,12 +10,11 @@ git clone https://www.github.com/atulya2109/Stats-Royale-Python/
 cd Stats-Royale-Python
 
 ```
-- Run this on a browser
+- Run this on Terminal OR CMD
 
 ```
 cd Stats-Royale-Python
 python stats.py
-
 ```
 
 And open http://127.0.0.1:5000 in your browser.

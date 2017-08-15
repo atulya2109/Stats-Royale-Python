@@ -10,7 +10,7 @@ git clone https://www.github.com/atulya2109/Stats-Royale-Python/
 cd Stats-Royale-Python
 
 ```
-- Run this on Terminal OR CMD
+- Run this in Terminal OR CMD
 
 ```
 cd Stats-Royale-Python

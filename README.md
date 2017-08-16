@@ -4,7 +4,7 @@ Retrieve player info from http://statsroyale.com/ in a JSON format.
 
 ## Installation & Usage:
 
-- 
+-
 
 -
 

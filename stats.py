@@ -220,6 +220,6 @@ def getChestCycle(tag, refresh=False):
 #print(battles[0]['result']['wins'])
 #print(battles[0]['left']['troops']['skeleton_horde'])
 
-#clan = getClan(tag='2CQQVQCU', refresh=False)
-#print(clan)
-print(getChestCycle(tag='PL2UV8j', refresh=False))
+clan = getClan(tag='2CQQVQCU', refresh=False)
+print(clan)
+#print(getChestCycle(tag='PL2UV8j', refresh=False))

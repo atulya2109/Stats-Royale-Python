@@ -1,14 +1,17 @@
 from bs4 import BeautifulSoup
 from json import loads
+from flask import Flask, request
 from time import sleep
 import requests
+
+app = Flask(__name__)
 
 '''Profile tags for testing '''
 # 9890JJJV, PRR2LUGO, 9VUQUGCP, PL2UV8J
 # 8QU0PCQ
 
 '''Clan tags for testing'''
-# 2CQQVQCU, QYLPC9C, G9CL0QJ
+# QQPPJRL, 2CQQVQCU, QYLPC9C, G9CL0QJ
 # statsroyale.com/clan/2CQQVQCU
 
 # Return player tag taking input as URL or player tag itself
@@ -26,7 +29,7 @@ def parseURL(tag, element):
 	if element == 'profile':
 		link = 'http://statsroyale.com/profile/' + tag
 	elif element == 'battles':
-		link = 'http://statsroyale.com/profile/' + tag
+		link = 'http://statsroyale.com/matches/' + tag
 	elif element == 'clan':
 		link = 'http://statsroyale.com/clan/' + tag
 	response = requests.get(link).text
@@ -34,6 +37,7 @@ def parseURL(tag, element):
 	return soup
 
 # Refresh player battles
+@app.route('/refresh/')
 def refresh(tag, element):
 	tag = getTag(tag)
 	if element == 'profile':
@@ -44,29 +48,37 @@ def refresh(tag, element):
 		link = 'http://statsroyale.com/clan/' + tag + '/refresh'
 	return requests.get(link)
 
-# Return player's username and level
+# Return player's username, level, clan, clan tag.
+
 def getProfileBasic(tag):
 	soup = parseURL(tag, element='profile')
-	basic = soup.find('div', {'class':'statistics__userInfo'})
+	# basic = soup.find('div', {'class':'statistics__userInfo'}
 	stats = {}
 
-	level = basic.find('span', {'class':'statistics__userLevel'}).get_text()
+	level = soup.find('span', {'class':'profileHeader__userLevel'}).get_text()
 	stats[u'level'] = int(level)
 
-	username = basic.find('div', {'class':'ui__headerMedium statistics__userName'}).get_text()
-	username = username.replace('\n', '')[:-3].lstrip().rstrip()
+	username = soup.find('div', {'class':'ui__headerMedium profileHeader__name'}).get_text()
+	username = username.strip('\n')[:-3].strip()
 	stats[u'username'] = username
 
-	clan = basic.get_text().replace(level, '').replace(username, '').lstrip().rstrip()
+	# clan = soup.find('profileHeader__userClan').get_text().replace(level, '').replace(username, '').strip()
+	clan = soup.find('a',{'class':'profileHeader__userClan'})
+	clan_name = clan.get_text().strip()
+
 	if clan == 'No Clan':
 		stats[u'clan'] = None
+		stats[u'clan tag'] = '#'
 	else:
-		stats[u'clan'] = clan
+		stats[u'clan'] = clan_name
+		clan_tag = '#' + clan['href'][6:].strip()
+		stats[u'clan tag'] = clan_tag
 
 	return stats
 
 
-# Return highest_trophies, donations, etc
+# Return highest_trophies, donations, etc.
+@app.route('/profile?tag')
 def getProfile(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
@@ -78,12 +90,12 @@ def getProfile(tag, refresh=False):
 	profile = soup.find('div', {'class':'statistics__metrics'})
 
 	for div in profile.find_all('div', {'class':'statistics__metric'}):
-		result = (div.find_all('div')[0].get_text().replace('\n', '')).lstrip().rstrip()
+		result = (div.find_all('div')[0].get_text().strip('\n')).strip()
 		try:
 			result = int(result)
 		except ValueError:
 			pass
-		item = div.find_all('div')[1].get_text().replace(' ', '_').lower()
+		item = div.find_all('div')[1].get_text().strip('_').lower()
 		stats[u'profile'][item] = result
 	return stats
 
@@ -93,18 +105,23 @@ def getBattleSide(area, side):
 	side = area.find('div', {'class':'replay__player replay__' + side + 'Player'})
 
 	username = side.find('div', {'class':'replay__userName'}).get_text()
-	battles[u'username'] = username.lstrip().rstrip()
+	battles[u'username'] = username.strip()
 
 	clan = side.find('div', {'class':'replay__clanName ui__mediumText'}).get_text()
-	clan = clan.lstrip().rstrip()
+	clan = clan.strip()
 
 	if clan == 'No Clan':
 		battles[u'clan'] = None
 	else:
 		battles[u'clan'] = clan
 
-	trophies = side.find('div', {'class':'replay__trophies'}).get_text()
-	battles[u'trophies'] = int(trophies.lstrip().rstrip())
+	try:
+		trophies = side.find('div', {'class':'replay__trophies'}).get_text().strip()
+		battles[u'trophies'] = trophies
+
+	except Exception as e:
+		battles[u'trophies'] = 'Not Available'
+
 
 	battles[u'troops'] = {}
 
@@ -128,7 +145,7 @@ def getBattles(tag, event='all', refresh=False):
 
 	soup = parseURL(tag, element='battles')
 
-	environment = soup.find_all('div', {'class':'replay'})
+	environment = soup.find_all('div', {'class':'replay__container'})
 	battles = []
 
 	for area in environment:
@@ -161,10 +178,10 @@ def getClanBasic(tag):
 	clan = {}
 
 	title = soup.find('div', {'class':'ui__headerMedium clan__clanName'}).get_text()
-	clan[u'name'] = title.lstrip().rstrip()
+	clan[u'name'] = title.strip()
 
 	description = soup.find('div', {'class':'ui__mediumText'}).get_text()
-	clan[u'description'] = description.lstrip().rstrip()
+	clan[u'description'] = description.strip()
 
 	clan_stats = soup.find_all('div', {'class':'clan__metricContent'})
 
@@ -186,40 +203,70 @@ def getClan(tag, refresh=False):
 	clan = getClanBasic(tag)
 	return clan
 
-# Returns a list with each chest as a dictionary which contains chest name an counter.
+# Returns a list with each chest as a dictionary which contains chest name an counter
 def getChestCycle(tag, refresh=False):
 	if refresh:
 		refresh(tag, element='profile')
 		sleep(20.1)
+
 	chest_cycle={}
 	chest_list=[]
 	soup = parseURL(tag, element='profile')
 	chests_queue = soup.find('div', {'class':'chests__queue'})
 	chests = chests_queue.find_all('div')
+
 	for chest in chests:
 		if 'chests__disabled' in chest['class'][-1]:
 			continue # Disabled chests are those chest that player has already got.
+
 		elif 'chests__next' in chest['class'][-1]:
 			chest_list.append({'next_chest':chest['class'][0][8:]}) # class=chests__silver chests__next
 			continue
+
 		elif 'chests__' in chest['class'][0]:
-			print (chest['class'][0])
 			chest_name = chest['class'][0][8:]
 			counter=chest.find('span', {'class':'chests__counter'}).get_text()
 			chest_list.append({'chest':chest_name, 'counter':counter})
+
 	return chest_list
 
-#stats = getProfile(tag='9890JJJV', refresh=False)
-#print(stats)
+ # Work In Progress
+def getClanMembers(tag, refresh=False):
+	if refresh:
+		refresh(tag, element='profile')
+		sleep(20.1)
 
-#battles = getBattles(tag='9890JJJV', event='all', refresh=False)
-#for x in battles:
-#	print(x)
+	soup = parseURL(tag, element='clan')
+	members=[]
+	rowContainers = soup.find_all('div', {'class':'clan__rowContainer'})
 
-#print(battles[0])
-#print(battles[0]['result']['wins'])
-#print(battles[0]['left']['troops']['skeleton_horde'])
+	for rowContainer in rowContainers:
+		member = {}
+		info = rowContainer.find_all('div',{'class':'clan__row'})
+		member[u'rank'] = int(info[0].get_text().strip().strip('#'))
+		username = rowContainer.find('a', {'class':'ui__blueLink'}).get_text().split(' ')
+		member[u'username'] = ''.join(username)
+		member[u'tag'] = rowContainer.find('a', {'class':'ui__blueLink'})['href'][9:]
+		member[u'level'] = rowContainer.find('span', {'class':'clan__playerLevel'}).get_text()
+		member[u'trophies'] = int(rowContainer.find('div', {'class':'clan__cup'}).get_text())
+		member[u'donations'] = int(rowContainer.find_all('div', {'class':"clan__row"})[5].get_text())
+		member[u'role'] = rowContainer.find_all('div', {'class':"clan__row"})[6].get_text().strip()
+		members.append(member)
 
-clan = getClan(tag='2CQQVQCU', refresh=False)
-print(clan)
-#print(getChestCycle(tag='PL2UV8j', refresh=False))
+	return members
+
+print(getBattles("PL2UV8J"))
+
+'''Methods That Are Working...'''
+# getChestCycle("PL2UV8J")
+# getProfileBasic("PL2UV8J")
+# getClanBasic("QQPPJRL")
+'''Methods Throwing Error...''' # If You Fixed Anyone Of These Please Mention Your Name
+
+'''Fixed !!!'''
+# getProfileBasic() by Atulya2109
+# getBattleSide() by Atulya2109
+# getBattles() by Atulya2109
+'''Uncomment to run in browser'''
+# if __name__ == '__main__':
+#     app.run(host = '127.0.0.1', port = 5000)

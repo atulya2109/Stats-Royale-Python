@@ -151,6 +151,9 @@ def getBattles(tag, event='all', refresh=False):
 	for area in environment:
 		battle = {}
 		battle[u'event'] = area['data-type']
+		
+		date = area.find('div', {'class':'replay__date ui__smallText'}).get_text().strip()
+		battle[u'date'] = date
 
 		outcome = area.find('div', {'class':'replay__win ui__headerExtraSmall'})
 
@@ -249,8 +252,9 @@ def getClanMembers(tag, refresh=False):
 		member[u'tag'] = rowContainer.find('a', {'class':'ui__blueLink'})['href'][9:]
 		member[u'level'] = rowContainer.find('span', {'class':'clan__playerLevel'}).get_text()
 		member[u'trophies'] = int(rowContainer.find('div', {'class':'clan__cup'}).get_text())
-		member[u'donations'] = int(rowContainer.find_all('div', {'class':"clan__row"})[5].get_text())
-		member[u'role'] = rowContainer.find_all('div', {'class':"clan__row"})[6].get_text().strip()
+		member[u'crowns'] = int(rowContainer.find_all('div', {'class':"clan__row"})[5].get_text())
+		member[u'donations'] = rowContainer.find_all('div', {'class':"clan__row"})[6].get_text().strip()
+		member[u'role'] = rowContainer.find_all('div', {'class':"clan__row"})[7].get_text().strip()
 		members.append(member)
 
 	return members
@@ -267,6 +271,7 @@ print(getBattles("PL2UV8J"))
 # getProfileBasic() by Atulya2109
 # getBattleSide() by Atulya2109
 # getBattles() by Atulya2109
+# getClanMembers() by Gogit2194
 '''Uncomment to run in browser'''
 # if __name__ == '__main__':
 #     app.run(host = '127.0.0.1', port = 5000)
